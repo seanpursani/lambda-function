@@ -1,33 +1,56 @@
-name: deploy to lambda
-on: [push]
+# name: deploy to lambda
+# on: [push]
+# jobs:
+#   deploy_source:
+#     name: build and deploy lambda
+#     strategy:
+#       matrix:
+#         node-version: [12.x]
+#     runs-on: ubuntu-latest
+#     steps:
+#       - uses: actions/checkout@v1
+#       - name: Python ${{ matrix.python-version }} sample
+#         uses: actions/setup-node@v1
+#         with:
+#           node-version: ${{ matrix.node-version }}
+#       - name: npm install and build
+#         run: |
+#           npm ci
+#           npm run build --if-present
+#         env:
+#           CI: true
+#       - name: zip
+#         uses: montudor/action-zip@v0.1.0
+#         with:
+#           args: zip -qq -r ./bundle.zip ./
+#       - name: default deploy
+#         uses: seanpursani/lambda-function@main
+#         with:
+#           aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+#           aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+#           aws_region: us-west-2
+#           function_name: HelloWorldFunction
+#           zip_file: bundle.zip          
+on:
+  push:
+    branches:
+      - main
 jobs:
-  deploy_source:
-    name: build and deploy lambda
-    strategy:
-      matrix:
-        node-version: [12.x]
+  build-deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - name: Python ${{ matrix.python-version }} sample
-        uses: actions/setup-node@v1
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+      - uses: aws-actions/setup-sam@v1
+      - uses: aws-actions/configure-aws-credentials@v1
         with:
-          node-version: ${{ matrix.node-version }}
-      - name: npm install and build
-        run: |
-          npm ci
-          npm run build --if-present
-        env:
-          CI: true
-      - name: zip
-        uses: montudor/action-zip@v0.1.0
-        with:
-          args: zip -qq -r ./bundle.zip ./
-      - name: default deploy
-        uses: seanpursani/lambda-function@main
-        with:
-          aws_access_key_id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws_region: us-west-2
-          function_name: HelloWorldFunction
-          zip_file: bundle.zip
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-west-2
+      # sam build 
+      - run: sam build --use-container
+
+# Run Unit tests- Specify unit tests here 
+
+# sam deploy
+      - run: sam deploy --no-confirm-changeset --no-fail-on-empty-changeset --stack-name sam-hello-world --s3-bucket dev6900.d3gw7q3m88bh0v.amplifyapp.com --capabilities CAPABILITY_IAM --region us-west-2
